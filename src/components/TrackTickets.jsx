@@ -18,14 +18,41 @@ export default function TrackTickets() {
   const [loading, setLoading] = useState(false)
 
   async function search() {
-    if (!phone.trim()) return
+    const rawInput = phone.trim()
+    if (!rawInput) return
     setLoading(true)
-    const { data } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('phone', phone.trim())
-      .order('created_at', { ascending: false })
-    setResults(data || [])
+
+    // Strip all spaces for clean matching
+    const cleanInput = rawInput.replace(/\s+/g, '')
+
+    // Build alternative variations to ensure accurate matching across standard prefix variations (07..., +254..., 254...)
+    let variations = [cleanInput]
+    
+    // Extract base number if it matches standard patterns to build robust fallback search terms
+    const baseMatch = cleanInput.match(/^(?:\+254|254|0)?([71]\d{8})$/)
+    if (baseMatch) {
+      const coreNumber = baseMatch[1] // e.g., "712345678"
+      variations = [
+        coreNumber,
+        `0${coreNumber}`,
+        `254${coreNumber}`,
+        `+254${coreNumber}`
+      ]
+    }
+
+    try {
+      const { data } = await supabase
+        .from('tickets')
+        .select('*')
+        .in('phone', variations) // Matches against any format the user or database might have stored
+        .order('created_at', { ascending: false })
+        
+      setResults(data || [])
+    } catch (err) {
+      console.error("Error searching tickets:", err)
+      setResults([])
+    }
+    
     setLoading(false)
   }
 
