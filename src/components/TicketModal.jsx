@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CATS, TECHNICIANS, STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
-import { updateTicket, getCosts, addCost, deleteCost, getHistory, addHistory } from '../lib/supabase'
+// Imported deleteTicket alongside your other database functions
+import { updateTicket, getCosts, addCost, deleteCost, getHistory, addHistory, deleteTicket } from '../lib/supabase'
 
 function statusBadge(s) {
   return { pending: 'b-pending', 'in-progress': 'b-progress', resolved: 'b-resolved' }[s] || 'b-pending'
@@ -45,6 +46,22 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
     for (const e of entries) await addHistory(e)
     setSaving(false)
     onSaved()
+  }
+
+  // Handle deleting the entire ticket permanent record
+  async function handleDeleteTicket() {
+    const confirmed = window.confirm(`Are you completely sure you want to permanently delete ticket ${ticket.id}? This will remove all associated history and logged repair costs. This action cannot be undone.`)
+    
+    if (!confirmed) return
+
+    setSaving(true)
+    try {
+      await deleteTicket(ticket.id)
+      onSaved() // Safely triggers a refresh on the dashboard grid and closes the modal view
+    } catch (err) {
+      alert('Failed to delete the ticket. Please try again.')
+      setSaving(false)
+    }
   }
 
   async function handleAddNote() {
@@ -231,7 +248,18 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
           ))}
         </div>
 
+        {/* Modal Footer Controls */}
         <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          {/* Permanent Delete Button pushing itself left away from save actions */}
+          <button 
+            className="btn btn-danger" 
+            onClick={handleDeleteTicket} 
+            disabled={saving}
+            style={{ marginRight: 'auto', background: '#b91c1c', color: '#fff', border: 'none' }}
+          >
+            🗑️ Delete Ticket
+          </button>
+          
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving...' : '✓ Save changes'}

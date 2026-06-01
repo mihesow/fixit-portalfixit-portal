@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CATS, URGENCY_OPTIONS } from '../lib/constants'
-import { createTicket, addHistory } from '../lib/supabase'
+// Imported the new cooldown function alongside existing imports
+import { createTicket, addHistory, getRecentTicketCountByHouse } from '../lib/supabase'
 
 export default function RepairForm() {
   const [phone, setPhone] = useState('')
@@ -46,9 +47,22 @@ export default function RepairForm() {
     }
 
     setLoading(true)
+    setAlert(null) // Clear past alerts before running the new check
+
     try {
+      // 24-Hour Cooldown Validation Check
+      const recentTicketCount = await getRecentTicketCountByHouse(house.trim())
+      if (recentTicketCount > 0) {
+        setAlert({ 
+          type: 'error', 
+          msg: `Submission blocked: Unit ${house.trim()} has already raised a ticket within the last 24 hours. Please wait before submitting another request.` 
+        })
+        setLoading(false)
+        return
+      }
+
       const ticket = await createTicket({
-        id: genId(), phone, house_number: house, description: desc, urgency,
+        id: genId(), phone, house_number: house.trim(), description: desc, urgency,
         categories: selectedCats, photos, ticket_type: 'repair',
         status: 'pending', technician: 'Unassigned', subject: '', subtype: '',
       })
@@ -71,7 +85,7 @@ export default function RepairForm() {
         </div>
         <div>
           <label>House / unit number</label>
-          {/* Updated placeholder to match your layout spec */}
+          {/* Formatted placeholder to match requirements precisely */}
           <input type="text" placeholder="e.g. EL68" value={house} onChange={e => setHouse(e.target.value)} />
         </div>
       </div>
