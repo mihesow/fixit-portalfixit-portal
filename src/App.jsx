@@ -9,9 +9,9 @@ export default function App() {
   return (
     <div className="app">
       <div className="topbar">
+        {/* Updated branding text and removed the logo-dot span */}
         <div className="topbar-logo">
-          <span className="logo-dot" />
-          FixIt Portal
+          Elevation House
         </div>
         <nav className="topbar-nav">
           <button

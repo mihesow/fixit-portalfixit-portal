@@ -66,11 +66,11 @@ export default function FeedbackForm() {
       <div className="grid2">
         <div>
           <label>Phone number</label>
-          <input type="tel" placeholder="+254 700 000 000" value={phone} onChange={e => setPhone(e.target.value)} />
+          <input type="tel" placeholder="+0712 345 678" value={phone} onChange={e => setPhone(e.target.value)} />
         </div>
         <div>
           <label>House / unit number</label>
-          <input type="text" placeholder="e.g. B-12" value={house} onChange={e => setHouse(e.target.value)} />
+          <input type="text" placeholder="e.g. EL68" value={house} onChange={e => setHouse(e.target.value)} />
         </div>
       </div>
 
