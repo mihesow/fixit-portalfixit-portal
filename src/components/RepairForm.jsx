@@ -26,11 +26,25 @@ export default function RepairForm() {
 
   function genId() { return 'TK-' + String(Math.floor(Math.random() * 90000) + 10000) }
 
+  // Kenyan Phone Number Validation Logic
+  function validatePhoneNumber(num) {
+    // Matches: +2547..., +2541..., 2547..., 2541..., 07..., 01... followed by 8 digits
+    const phoneRegex = /^(?:\+254|254|0)?(7|1)\d{8}$/
+    return phoneRegex.test(num.replace(/\s+/g, '')) // Strips spaces before checking
+  }
+
   async function handleSubmit() {
     if (!phone || !house || !desc || !urgency || selectedCats.length === 0) {
       setAlert({ type: 'error', msg: 'Please fill in all fields, select urgency, and at least one category.' })
       return
     }
+
+    // Enforce valid phone check
+    if (!validatePhoneNumber(phone)) {
+      setAlert({ type: 'error', msg: 'Please enter a valid Kenyan phone number (e.g., 0712345678).' })
+      return
+    }
+
     setLoading(true)
     try {
       const ticket = await createTicket({
@@ -53,11 +67,12 @@ export default function RepairForm() {
       <div className="grid2">
         <div>
           <label>Phone number</label>
-          <input type="tel" placeholder="+254 700 000 000" value={phone} onChange={e => setPhone(e.target.value)} />
+          <input type="tel" placeholder="e.g. 0712 345 678" value={phone} onChange={e => setPhone(e.target.value)} />
         </div>
         <div>
           <label>House / unit number</label>
-          <input type="text" placeholder="e.g. B-12" value={house} onChange={e => setHouse(e.target.value)} />
+          {/* Updated placeholder to match your layout spec */}
+          <input type="text" placeholder="e.g. EL68" value={house} onChange={e => setHouse(e.target.value)} />
         </div>
       </div>
       <div>

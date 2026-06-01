@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getTickets } from '../lib/supabase'
+import { getTickets, supabase } from '../lib/supabase' // Assumes your supabase client instance is exported here
 import { CATS, TECHNICIANS, STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
 import TicketModal from '../components/TicketModal'
 import ReportModal from '../components/ReportModal'
@@ -15,6 +15,12 @@ function typeBadge(t) {
 }
 
 export default function AgentDashboard() {
+  const [session, setSession] = useState(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authLoading, setAuthLoading] = useState(true)
+  const [authError, setAuthError] = useState('')
+
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -26,15 +32,88 @@ export default function AgentDashboard() {
   const [openTicket, setOpenTicket] = useState(null)
   const [showReport, setShowReport] = useState(false)
 
+  // 1. Check for active Supabase Auth Session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setAuthLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // 2. Handle Login Submission
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setAuthError('')
+    setAuthLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) setAuthError(error.message)
+    setAuthLoading(false)
+  }
+
+  // 3. Handle Logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+
   const load = useCallback(async () => {
+    if (!session) return
     setLoading(true)
     const data = await getTickets()
     setTickets(data)
     setLoading(false)
-  }, [])
+  }, [session])
 
   useEffect(() => { load() }, [load])
 
+  // --- Auth Guard Guardrails ---
+  if (authLoading && !session) {
+    return <div className="empty">Verifying credentials...</div>
+  }
+
+  if (!session) {
+    return (
+      <div style={{ maxWidth: 400, margin: '80px auto', padding: '2rem' }} className="card">
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0 }}>Elevation Portal</h2>
+          <p style={{ color: 'var(--text3)', fontSize: 14, marginTop: 4 }}>Agent Login Required</p>
+        </div>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 13 }}>Email / Username</label>
+            <input 
+              type="email" 
+              placeholder="agent@elevation.com" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required 
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 13 }}>Password</label>
+            <input 
+              type="password" 
+              placeholder="••••••••" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              required 
+              style={{ width: '100%' }}
+            />
+          </div>
+          {authError && <div style={{ color: '#b91c1c', fontSize: 13 }}>{authError}</div>}
+          <button type="submit" className="btn" style={{ width: '100%', marginTop: 8 }}>Sign In</button>
+        </form>
+      </div>
+    )
+  }
+
+  // --- Filter Logic ---
   const filtered = tickets.filter(t => {
     if (filterStatus && t.status !== filterStatus) return false
     if (filterType && t.ticket_type !== filterType) return false
@@ -59,12 +138,22 @@ export default function AgentDashboard() {
   const urgentOpen = tickets.filter(t => t.urgency === 'urgent' && t.status !== 'resolved').length
   const inProgress = tickets.filter(t => t.status === 'in-progress').length
 
-  function fmtDate(iso) {
-    return new Date(iso).toLocaleDateString('en-KE', { day: '2-digit', month: 'short', year: 'numeric' })
-  }
-
   return (
     <div>
+      {/* Header with Branding, Logo, and Logout */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div>
+          <h1 style={{ margin: 0 }}>Elevation Portal</h1>
+          <button className="btn btn-sm" style={{ marginTop: 8, background: '#e5e7eb', color: '#1f2937' }} onClick={handleLogout}>
+            Sign Out
+          </button>
+        </div>
+        {/* Dashboard Building Logo Placeholder */}
+        <div style={{ width: 60, height: 60, borderRadius: 8, background: '#1757b0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: 20 }}>
+          EP
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="stats-row">
         <div className="stat">
