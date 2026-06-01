@@ -66,7 +66,7 @@ export default function FeedbackForm() {
       <div className="grid2">
         <div>
           <label>Phone number</label>
-          <input type="tel" placeholder="+0712 345 678" value={phone} onChange={e => setPhone(e.target.value)} />
+          <input type="tel" placeholder="e.g. 0712 345 678" value={phone} onChange={e => setPhone(e.target.value)} />
         </div>
         <div>
           <label>House / unit number</label>
