@@ -16,7 +16,7 @@ export const CATS = [
   { id: 'other',      label: 'Other',                   icon: '•••' },
 ]
 
-export const TECHNICIANS = ['James Mwangi','Aisha Odhiambo','Peter Kamau','Grace Njoki','Unassigned']
+export const TECHNICIANS = ['Plumber','Electrician','Painter','Mason', 'Carpenter', 'Management', 'Unassigned']
 
 export const URGENCY_OPTIONS = [
   { value: 'urgent',   label: 'Urgent',     sub: 'Needs immediate attention' },
