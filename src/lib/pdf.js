@@ -14,7 +14,7 @@ export function generatePDF({ tickets, costs, type, reportStatus }) {
   let y = 20
 
   doc.setFontSize(20); doc.setFont(undefined, 'bold')
-  doc.text('FixIt Portal', 14, y); y += 8
+  doc.text('Elevation House Repairs', 14, y); y += 8
   doc.setFontSize(11); doc.setFont(undefined, 'normal'); doc.setTextColor(100)
   const typeLabel = { all: 'Full ticket history', expenses: 'Repair expenses summary', resolved: 'Resolved tickets', complaints: 'Complaints & requests' }[type] || 'Report'
   doc.text(`${typeLabel}  |  Generated: ${fmtDate(new Date().toISOString())}  |  Tickets: ${tickets.length}`, 14, y)
@@ -58,5 +58,5 @@ export function generatePDF({ tickets, costs, type, reportStatus }) {
     })
   }
 
-  doc.save(`FixIt-Report-${Date.now()}.pdf`)
+  doc.save(`Elevation House Repairs-${Date.now()}.pdf`)
 }
