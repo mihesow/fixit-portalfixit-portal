@@ -82,7 +82,7 @@ export default function RepairForm() {
         </div>
         <div>
           <label>House / unit number</label>
-          <input type="text" placeholder="e.g. EL03" value={house} onChange={e => setHouse(e.target.value)} />
+          <input type="text" placeholder="e.g. EL68" value={house} onChange={e => setHouse(e.target.value)} />
         </div>
       </div>
       <div>
