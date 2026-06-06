@@ -1,12 +1,13 @@
-import { Frown, ClipboardList, Lightbulb } from 'lucide-react'
+import { Frown, ClipboardList, Lightbulb, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
 import { REQUEST_SUBTYPES } from '../lib/constants'
 import { createTicket, addHistory } from '../lib/supabase'
 
-const SUBMISSION_TYPES = [
-  { id: 'complaint',  label: 'Complaint',  sub: 'About apartment or management', icon: <Frown size={24} /> },
-  { id: 'request',    label: 'Request',    sub: 'Keys, transfers, changes etc.', icon: <ClipboardList size={24} /> },
-  { id: 'suggestion', label: 'Suggestion', sub: 'Ideas to improve the premises',  icon: <Lightbulb size={24} /> }
+// 1. Updated the REQ_TYPES configuration array with Lucide components
+const REQ_TYPES = [
+  { value: 'complaint',  label: 'Complaint',   icon: <Frown size={18} />, sub: 'About apartment or management' },
+  { value: 'request',    label: 'Request',     icon: <ClipboardList size={18} />, sub: 'Keys, transfers, changes etc.' },
+  { value: 'suggestion', label: 'Suggestion',  icon: <Lightbulb size={18} />, sub: 'Ideas to improve the premises' },
 ]
 
 export default function FeedbackForm() {
@@ -84,6 +85,7 @@ export default function FeedbackForm() {
               className={`sel-opt${reqType === t.value ? ' sel-' + t.value : ''}`}
               onClick={() => { setReqType(t.value); setSubtype('') }}
             >
+              {/* 2. Rendered the icon component seamlessly */}
               <span className="icon">{t.icon}</span>
               <span style={{ fontWeight: 500 }}>{t.label}</span>
               <span className="sub">{t.sub}</span>
@@ -128,9 +130,15 @@ export default function FeedbackForm() {
         </select>
       </div>
 
+      {/* 3. Updated button to use flex alignment and the ArrowRight icon */}
       <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Submitting...' : '→ Submit'}
+        <button 
+          className="btn btn-primary" 
+          onClick={handleSubmit} 
+          disabled={loading}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          {loading ? 'Submitting...' : <><ArrowRight size={16} /> Submit request</>}
         </button>
       </div>
     </div>
