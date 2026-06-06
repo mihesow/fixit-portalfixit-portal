@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
+// 1. Import Lucide icons at the top
+import { Ticket, Search } from 'lucide-react'
 
 function statusBadge(s) {
   return { pending: 'b-pending', 'in-progress': 'b-progress', resolved: 'b-resolved' }[s] || 'b-pending'
@@ -58,7 +60,11 @@ export default function TrackTickets() {
 
   return (
     <div className="card">
-      <div className="card-title">🎫 Track your tickets</div>
+      {/* 2. Swapped 🎫 for Lucide Ticket icon with inline flex box */}
+      <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Ticket size={18} /> Track your tickets
+      </div>
+
       <div className="field-row" style={{ gap: 8 }}>
         <input
           type="text"
@@ -67,8 +73,14 @@ export default function TrackTickets() {
           onChange={e => setPhone(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && search()}
         />
-        <button className="btn" onClick={search} disabled={loading} style={{ flexShrink: 0 }}>
-          {loading ? '...' : '🔍 Find'}
+        {/* 3. Added Search icon to the action button */}
+        <button 
+          className="btn" 
+          onClick={search} 
+          disabled={loading} 
+          style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          {loading ? '...' : <><Search size={14} /> Find</>}
         </button>
       </div>
 
