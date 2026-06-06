@@ -1,4 +1,6 @@
 import { useState } from 'react'
+// 1. Import the icons from lucide-react at the top
+import { House, LayoutDashboard } from 'lucide-react'
 import TenantPortal from './pages/TenantPortal'
 import AgentDashboard from './pages/AgentDashboard'
 import './index.css'
@@ -9,7 +11,6 @@ export default function App() {
   return (
     <div className="app">
       <div className="topbar">
-        {/* Updated branding text and removed the logo-dot span */}
         <div className="topbar-logo">
           Elevation House
         </div>
@@ -18,13 +19,15 @@ export default function App() {
             className={`nav-btn${view === 'tenant' ? ' active' : ''}`}
             onClick={() => setView('tenant')}
           >
-            🏠 Tenant
+            {/* 2. Swap the emoji for the House component */}
+            <House size={18} style={{ marginRight: 6 }} /> Tenant
           </button>
           <button
             className={`nav-btn${view === 'agent' ? ' active' : ''}`}
             onClick={() => setView('agent')}
           >
-            📊 Agent Dashboard
+            {/* 3. Swap the emoji for the Dashboard component */}
+            <LayoutDashboard size={18} style={{ marginRight: 6 }} /> Agent Dashboard
           </button>
         </nav>
       </div>
