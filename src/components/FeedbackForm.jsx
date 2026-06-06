@@ -1,11 +1,12 @@
+import { Frown, ClipboardList, Lightbulb } from 'lucide-react'
 import { useState } from 'react'
 import { REQUEST_SUBTYPES } from '../lib/constants'
 import { createTicket, addHistory } from '../lib/supabase'
 
-const REQ_TYPES = [
-  { value: 'complaint',  label: 'Complaint',   icon: '😤', sub: 'About apartment or management' },
-  { value: 'request',    label: 'Request',      icon: '📋', sub: 'Keys, transfers, changes etc.' },
-  { value: 'suggestion', label: 'Suggestion',   icon: '💡', sub: 'Ideas to improve the premises' },
+const SUBMISSION_TYPES = [
+  { id: 'complaint',  label: 'Complaint',  sub: 'About apartment or management', icon: <Frown size={24} /> },
+  { id: 'request',    label: 'Request',    sub: 'Keys, transfers, changes etc.', icon: <ClipboardList size={24} /> },
+  { id: 'suggestion', label: 'Suggestion', sub: 'Ideas to improve the premises',  icon: <Lightbulb size={24} /> }
 ]
 
 export default function FeedbackForm() {
