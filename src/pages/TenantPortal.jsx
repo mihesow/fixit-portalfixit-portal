@@ -20,7 +20,7 @@ export default function TenantPortal() {
       <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
         <img
           src={LOGO_B64}
-          alt="Elevation House"
+          alt="Elevation Portal"
           style={{ height: 56, objectFit: 'contain' }}
         />
       </div>
