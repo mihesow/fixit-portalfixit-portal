@@ -1,40 +1,28 @@
-import { useState } from 'react'
-// 1. Import the icons from lucide-react at the top
-import { House, LayoutDashboard } from 'lucide-react'
 import TenantPortal from './pages/TenantPortal'
 import AgentDashboard from './pages/AgentDashboard'
 import './index.css'
 
 export default function App() {
-  const [view, setView] = useState('tenant')
+  // 1. Grab whatever path is typed into the browser's URL bar
+  const path = window.location.pathname
 
+  // 2. Secret Route: If the URL is exactly '/agent', bypass the tenant layout entirely
+  if (path === '/agent') {
+    return <AgentDashboard />
+  }
+
+  // 3. Default Fallback: Show only the clean Tenant Portal layout
   return (
     <div className="app">
       <div className="topbar">
         <div className="topbar-logo">
           Elevation House
         </div>
-        <nav className="topbar-nav">
-          <button
-            className={`nav-btn${view === 'tenant' ? ' active' : ''}`}
-            onClick={() => setView('tenant')}
-          >
-            {/* 2. Swap the emoji for the House component */}
-            <House size={18} style={{ marginRight: 6 }} /> Tenant
-          </button>
-          <button
-            className={`nav-btn${view === 'agent' ? ' active' : ''}`}
-            onClick={() => setView('agent')}
-          >
-            {/* 3. Swap the emoji for the Dashboard component */}
-            <LayoutDashboard size={18} style={{ marginRight: 6 }} /> Agent Dashboard
-          </button>
-        </nav>
+        {/* Nav buttons have been removed so tenants can't see or click over to the agent dashboard */}
       </div>
 
       <main className="main">
-        {view === 'tenant' && <TenantPortal />}
-        {view === 'agent'  && <AgentDashboard />}
+        <TenantPortal />
       </main>
     </div>
   )
