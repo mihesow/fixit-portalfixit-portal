@@ -3,6 +3,8 @@ import { getTickets, supabase } from '../lib/supabase' // Assumes your supabase 
 import { CATS, TECHNICIANS, STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
 import TicketModal from '../components/TicketModal'
 import ReportModal from '../components/ReportModal'
+// 1. Imported the Lucide icons at the top
+import { ClipboardList, FileText, Inbox } from 'lucide-react'
 
 function statusBadge(s) {
   return { pending: 'b-pending', 'in-progress': 'b-progress', resolved: 'b-resolved' }[s] || 'b-pending'
@@ -32,7 +34,7 @@ export default function AgentDashboard() {
   const [openTicket, setOpenTicket] = useState(null)
   const [showReport, setShowReport] = useState(false)
 
-  // 1. Check for active Supabase Auth Session
+  // Check for active Supabase Auth Session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -46,7 +48,7 @@ export default function AgentDashboard() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // 2. Handle Login Submission
+  // Handle Login Submission
   const handleLogin = async (e) => {
     e.preventDefault()
     setAuthError('')
@@ -56,7 +58,7 @@ export default function AgentDashboard() {
     setAuthLoading(false)
   }
 
-  // 3. Handle Logout
+  // Handle Logout
   const handleLogout = async () => {
     await supabase.auth.signOut()
   }
@@ -176,8 +178,18 @@ export default function AgentDashboard() {
 
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
-          <div className="card-title" style={{ margin: 0 }}>📋 All tickets</div>
-          <button className="btn btn-sm" onClick={() => setShowReport(true)}>📄 PDF report</button>
+          {/* 2. Added ClipboardList icon and flex centering */}
+          <div className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ClipboardList size={18} /> All tickets
+          </div>
+          {/* 3. Added FileText icon to the PDF button */}
+          <button 
+            className="btn btn-sm" 
+            onClick={() => setShowReport(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <FileText size={14} /> PDF report
+          </button>
         </div>
 
         {/* Filters */}
@@ -222,8 +234,9 @@ export default function AgentDashboard() {
         {loading ? (
           <div className="empty">Loading tickets...</div>
         ) : filtered.length === 0 ? (
-          <div className="empty">
-            <div style={{ fontSize: 32 }}>📭</div>
+          /* 4. Swapped 📭 out for a clean Lucide Inbox icon layout */
+          <div className="empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <Inbox size={32} style={{ color: 'var(--text3)' }} />
             <div style={{ marginTop: 8 }}>No tickets found</div>
           </div>
         ) : (
