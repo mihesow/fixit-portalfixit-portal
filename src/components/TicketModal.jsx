@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { CATS, TECHNICIANS, STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
-// Imported deleteTicket alongside your other database functions
 import { updateTicket, getCosts, addCost, deleteCost, getHistory, addHistory, deleteTicket } from '../lib/supabase'
+// 1. Import Lucide icons
+import { X, Trash2, Check } from 'lucide-react'
 
 function statusBadge(s) {
   return { pending: 'b-pending', 'in-progress': 'b-progress', resolved: 'b-resolved' }[s] || 'b-pending'
@@ -57,7 +58,7 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
     setSaving(true)
     try {
       await deleteTicket(ticket.id)
-      onSaved() // Safely triggers a refresh on the dashboard grid and closes the modal view
+      onSaved() 
     } catch (err) {
       alert('Failed to delete the ticket. Please try again.')
       setSaving(false)
@@ -93,7 +94,10 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
       <div className="modal" style={{ maxWidth: 720 }}>
         <div className="modal-header">
           <h2 style={{ fontFamily: 'DM Mono, monospace', fontSize: 15 }}>{ticket.id}</h2>
-          <button className="btn btn-sm" onClick={onClose}>✕</button>
+          {/* 2. Swapped text X for Lucide X */}
+          <button className="btn btn-sm" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} />
+          </button>
         </div>
 
         {/* Info row */}
@@ -220,7 +224,10 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
                     <td>{Number(c.amount).toLocaleString()}</td>
                     <td>{c.date_logged}</td>
                     <td>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteCost(c.id, c.description)}>🗑</button>
+                      {/* 3. Swapped emoji for Lucide Trash2 */}
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteCost(c.id, c.description)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -248,21 +255,23 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
           ))}
         </div>
 
-        {/* Modal Footer Controls */}
+        {/* Footer Buttons */}
         <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          {/* Permanent Delete Button pushing itself left away from save actions */}
+          {/* 4. Swapped Ticket Delete emoji for Lucide Trash2 */}
           <button 
             className="btn btn-danger" 
             onClick={handleDeleteTicket} 
             disabled={saving}
-            style={{ marginRight: 'auto', background: '#b91c1c', color: '#fff', border: 'none' }}
+            style={{ marginRight: 'auto', background: '#b91c1c', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            🗑️ Delete Ticket
+            <Trash2 size={16} /> Delete Ticket
           </button>
           
           <button className="btn" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : '✓ Save changes'}
+          
+          {/* 5. Swapped checkmark string for Lucide Check */}
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {saving ? 'Saving...' : <><Check size={16} /> Save changes</>}
           </button>
         </div>
       </div>
