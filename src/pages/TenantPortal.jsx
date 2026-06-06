@@ -1,13 +1,15 @@
+import { Wrench, Megaphone, Ticket } from 'lucide-react'
 import { useState } from 'react'
 import RepairForm from '../components/RepairForm'
 import FeedbackForm from '../components/FeedbackForm'
 import TrackTickets from '../components/TrackTickets'
 import LOGO_B64 from '../lib/logo'
 
+// 1. Updated the TABS array to use Lucide components
 const TABS = [
-  { id: 'repair',   label: '🔧 Repair request'        },
-  { id: 'feedback', label: '📣 Complaints & requests'  },
-  { id: 'track',    label: '🎫 Track tickets'          },
+  { id: 'repair',   label: 'Repair request',        icon: <Wrench size={16} /> },
+  { id: 'feedback', label: 'Complaints & requests', icon: <Megaphone size={16} /> },
+  { id: 'track',    label: 'Track tickets',         icon: <Ticket size={16} /> },
 ]
 
 export default function TenantPortal() {
@@ -36,7 +38,11 @@ export default function TenantPortal() {
             key={t.id}
             className={`tab-btn${tab === t.id ? ' active' : ''}`}
             onClick={() => setTab(t.id)}
+            // 2. Added flex layout so the icon and text sit nicely next to each other
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
+            {/* 3. Render the icon right before the label */}
+            {t.icon}
             {t.label}
           </button>
         ))}
