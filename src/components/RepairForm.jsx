@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { CATS, URGENCY_OPTIONS } from '../lib/constants'
-// Imported the new cooldown function alongside existing imports
 import { createTicket, addHistory, getRecentTicketCountByHouse } from '../lib/supabase'
+// 1. Import Lucide icons
+import { AlertTriangle, Clock, Leaf, Camera, ArrowRight } from 'lucide-react'
 
 export default function RepairForm() {
   const [phone, setPhone] = useState('')
@@ -27,11 +28,9 @@ export default function RepairForm() {
 
   function genId() { return 'TK-' + String(Math.floor(Math.random() * 90000) + 10000) }
 
-  // Kenyan Phone Number Validation Logic
   function validatePhoneNumber(num) {
-    // Matches: +2547..., +2541..., 2547..., 2541..., 07..., 01... followed by 8 digits
     const phoneRegex = /^(?:\+254|254|0)?(7|1)\d{8}$/
-    return phoneRegex.test(num.replace(/\s+/g, '')) // Strips spaces before checking
+    return phoneRegex.test(num.replace(/\s+/g, ''))
   }
 
   async function handleSubmit() {
@@ -40,17 +39,15 @@ export default function RepairForm() {
       return
     }
 
-    // Enforce valid phone check
     if (!validatePhoneNumber(phone)) {
-      setAlert({ type: 'error', msg: 'Please enter a valid Kenyan phone number (e.g., 0712345678).' })
+      setAlert({ type: 'error', msg: 'Please enter a valid phone number (e.g., 0712345678).' })
       return
     }
 
     setLoading(true)
-    setAlert(null) // Clear past alerts before running the new check
+    setAlert(null)
 
     try {
-      // 24-Hour Cooldown Validation Check
       const recentTicketCount = await getRecentTicketCountByHouse(house.trim())
       if (recentTicketCount > 0) {
         setAlert({ 
@@ -67,7 +64,7 @@ export default function RepairForm() {
         status: 'pending', technician: 'Unassigned', subject: '', subtype: '',
       })
       await addHistory({ ticket_id: ticket.id, action: 'Repair request submitted by tenant' })
-      setAlert({ type: 'success', msg: `Submitted! Your reference: ${ticket.id} — save this for tracking.` })
+      setAlert({ type: 'success', msg: `Submitted! Ticket: ${ticket.id} — use phone number for tracking.` })
       setPhone(''); setHouse(''); setDesc(''); setUrgency(''); setSelectedCats([]); setPhotos([])
     } catch (err) {
       setAlert({ type: 'error', msg: 'Something went wrong. Please try again.' })
@@ -85,8 +82,7 @@ export default function RepairForm() {
         </div>
         <div>
           <label>House / unit number</label>
-          {/* Formatted placeholder to match requirements precisely */}
-          <input type="text" placeholder="e.g. EL68" value={house} onChange={e => setHouse(e.target.value)} />
+          <input type="text" placeholder="e.g. EL03" value={house} onChange={e => setHouse(e.target.value)} />
         </div>
       </div>
       <div>
@@ -94,7 +90,12 @@ export default function RepairForm() {
         <div className="urgency-row">
           {URGENCY_OPTIONS.map(u => (
             <button key={u.value} className={`sel-opt${urgency === u.value ? ' sel-' + u.value : ''}`} onClick={() => setUrgency(u.value)}>
-              <span className="icon">{u.value === 'urgent' ? '🚨' : u.value === 'moderate' ? '⏱️' : '🌿'}</span>
+              {/* 2. Swapped Urgency Emojis for Lucide Icons */}
+              <span className="icon">
+                {u.value === 'urgent' ? <AlertTriangle size={18} /> : 
+                 u.value === 'moderate' ? <Clock size={18} /> : 
+                 <Leaf size={18} />}
+              </span>
               <span style={{ fontWeight: 500 }}>{u.label}</span>
               <span className="sub">{u.sub}</span>
             </button>
@@ -118,7 +119,10 @@ export default function RepairForm() {
       <div>
         <label>Photos <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9aa0b8' }}>(optional)</span></label>
         <div className="photo-upload" onClick={() => document.getElementById('photo-input').click()}>
-          <div style={{ fontSize: 28 }}>📷</div>
+          {/* 3. Swapped Camera Emoji for Lucide Icon */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Camera size={32} strokeWidth={1.5} />
+          </div>
           <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 6 }}>Click to upload photos</div>
         </div>
         <input id="photo-input" type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotos} />
@@ -127,8 +131,9 @@ export default function RepairForm() {
         )}
       </div>
       <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Submitting...' : '→ Submit request'}
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* 4. Added a clean Lucide arrow to the submit button */}
+          {loading ? 'Submitting...' : <><ArrowRight size={16} /> Submit request</>}
         </button>
       </div>
     </div>
