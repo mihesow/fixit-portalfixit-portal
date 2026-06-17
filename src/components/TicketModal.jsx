@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Trash2, Check, X } from 'lucide-react'
 import { CATS, TECHNICIANS, STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
-import { updateTicket, getCosts, addCost, deleteCost, getHistory, addHistory, deleteTicket } from '../lib/supabase'
-// 1. Import Lucide icons
-import { X, Trash2, Check } from 'lucide-react'
+import { updateTicket, getCosts, addCost, deleteCost, getHistory, addHistory } from '../lib/supabase'
 
 function statusBadge(s) {
   return { pending: 'b-pending', 'in-progress': 'b-progress', resolved: 'b-resolved' }[s] || 'b-pending'
@@ -13,14 +12,12 @@ function urgBadge(u) {
 function typeBadge(t) {
   return { repair: 'b-repair', complaint: 'b-complaint', request: 'b-request', suggestion: 'b-suggestion' }[t] || 'b-repair'
 }
-function catLabel(id) {
-  return CATS.find(c => c.id === id)?.label || id
-}
+function catLabel(id) { return CATS.find(c => c.id === id)?.label || id }
 function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('en-KE', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-export default function TicketModal({ ticket, onClose, onSaved }) {
+export default function TicketModal({ ticket, onClose, onSaved, onDeleteRequest }) {
   const [status, setStatus] = useState(ticket.status)
   const [technician, setTechnician] = useState(ticket.technician)
   const [note, setNote] = useState('')
@@ -47,22 +44,6 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
     for (const e of entries) await addHistory(e)
     setSaving(false)
     onSaved()
-  }
-
-  // Handle deleting the entire ticket permanent record
-  async function handleDeleteTicket() {
-    const confirmed = window.confirm(`Are you completely sure you want to permanently delete ticket ${ticket.id}? This will remove all associated history and logged repair costs. This action cannot be undone.`)
-    
-    if (!confirmed) return
-
-    setSaving(true)
-    try {
-      await deleteTicket(ticket.id)
-      onSaved() 
-    } catch (err) {
-      alert('Failed to delete the ticket. Please try again.')
-      setSaving(false)
-    }
   }
 
   async function handleAddNote() {
@@ -94,13 +75,18 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
       <div className="modal" style={{ maxWidth: 720 }}>
         <div className="modal-header">
           <h2 style={{ fontFamily: 'DM Mono, monospace', fontSize: 15 }}>{ticket.id}</h2>
-          {/* 2. Swapped text X for Lucide X */}
-          <button className="btn btn-sm" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => onDeleteRequest(ticket.id)}
+              title="Delete ticket"
+            >
+              <Trash2 size={13} /> Delete
+            </button>
+            <button className="btn btn-sm" onClick={onClose}><X size={14} /></button>
+          </div>
         </div>
 
-        {/* Info row */}
         <div className="grid2" style={{ marginBottom: '1rem' }}>
           <div>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tenant</div>
@@ -118,7 +104,6 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
           </div>
         </div>
 
-        {/* Subject */}
         {ticket.subject && (
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 3 }}>Subject</div>
@@ -126,7 +111,6 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
           </div>
         )}
 
-        {/* Categories */}
         {isRepair && ticket.categories?.length > 0 && (
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 5 }}>Categories</div>
@@ -140,7 +124,6 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
           </div>
         )}
 
-        {/* Subtype */}
         {ticket.subtype && (
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 3 }}>Request type</div>
@@ -148,13 +131,11 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
           </div>
         )}
 
-        {/* Description */}
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 5 }}>Description</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text)' }}>{ticket.description}</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7 }}>{ticket.description}</div>
         </div>
 
-        {/* Photos */}
         {ticket.photos?.length > 0 && (
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 6 }}>Photos</div>
@@ -165,8 +146,6 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
         )}
 
         <div className="sep" />
-
-        {/* Agent controls */}
         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Agent controls</div>
         <div className="grid2" style={{ gap: '1rem' }}>
           <div>
@@ -188,18 +167,11 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
         <div style={{ marginTop: 12 }}>
           <label>Internal note</label>
           <div className="field-row">
-            <input
-              type="text"
-              placeholder="Add a note..."
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAddNote()}
-            />
+            <input type="text" placeholder="Add a note..." value={note} onChange={e => setNote(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddNote()} />
             <button className="btn btn-sm" onClick={handleAddNote} style={{ flexShrink: 0 }}>Add</button>
           </div>
         </div>
 
-        {/* Costs — repair tickets only */}
         {isRepair && (
           <>
             <div className="sep" />
@@ -224,9 +196,8 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
                     <td>{Number(c.amount).toLocaleString()}</td>
                     <td>{c.date_logged}</td>
                     <td>
-                      {/* 3. Swapped emoji for Lucide Trash2 */}
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteCost(c.id, c.description)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Trash2 size={14} />
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteCost(c.id, c.description)}>
+                        <Trash2 size={12} />
                       </button>
                     </td>
                   </tr>
@@ -241,37 +212,21 @@ export default function TicketModal({ ticket, onClose, onSaved }) {
           </>
         )}
 
-        {/* History */}
         <div className="sep" />
         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>History</div>
         <div className="timeline">
           {history.map((h, i) => (
             <div key={i} className="tl-item">
               <div className="tl-dot" />
-              <div className="tl-text">
-                <strong>{fmtDate(h.created_at)}</strong> — {h.action}
-              </div>
+              <div className="tl-text"><strong>{fmtDate(h.created_at)}</strong> — {h.action}</div>
             </div>
           ))}
         </div>
 
-        {/* Footer Buttons */}
         <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          {/* 4. Swapped Ticket Delete emoji for Lucide Trash2 */}
-          <button 
-            className="btn btn-danger" 
-            onClick={handleDeleteTicket} 
-            disabled={saving}
-            style={{ marginRight: 'auto', background: '#b91c1c', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Trash2 size={16} /> Delete Ticket
-          </button>
-          
           <button className="btn" onClick={onClose}>Cancel</button>
-          
-          {/* 5. Swapped checkmark string for Lucide Check */}
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {saving ? 'Saving...' : <><Check size={16} /> Save changes</>}
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            <Check size={14} /> {saving ? 'Saving...' : 'Save changes'}
           </button>
         </div>
       </div>
