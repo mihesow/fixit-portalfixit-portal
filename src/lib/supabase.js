@@ -28,6 +28,20 @@ export async function deleteTicket(id) {
   if (error) throw error
 }
 
+// Returns how many repair tickets a given house number has submitted
+// in the last 24 hours — used to block duplicate submissions.
+export async function getRecentTicketCountByHouse(houseNumber) {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const { data, error, count } = await supabase
+    .from('tickets')
+    .select('id', { count: 'exact' })
+    .eq('house_number', houseNumber)
+    .eq('ticket_type', 'repair')
+    .gte('created_at', since)
+  if (error) throw error
+  return count ?? (data ? data.length : 0)
+}
+
 export async function getCosts(ticketId) {
   const { data, error } = await supabase.from('costs').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true })
   if (error) throw error
