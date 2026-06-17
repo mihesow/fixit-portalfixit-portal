@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Home, LayoutDashboard, LogOut } from 'lucide-react'
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { LayoutDashboard, LogOut } from 'lucide-react'
 import { supabase } from './lib/supabase'
 import TenantPortal from './pages/TenantPortal'
 import AgentDashboard from './pages/AgentDashboard'
 import AgentLogin from './components/AgentLogin'
 import './index.css'
 
-export default function App() {
-  const [view, setView] = useState('tenant')
+function AdminRoute() {
   const [session, setSession] = useState(null)
   const [checkingSession, setCheckingSession] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -26,16 +27,12 @@ export default function App() {
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    setView('tenant')
+    navigate('/')
   }
 
-  // Still checking for an existing session — avoid flicker
-  if (checkingSession) {
-    return null
-  }
+  if (checkingSession) return null
 
-  // Trying to view agent dashboard without being logged in
-  if (view === 'agent' && !session) {
+  if (!session) {
     return <AgentLogin onLogin={() => {}} />
   }
 
@@ -47,30 +44,45 @@ export default function App() {
           Elevation Portal
         </div>
         <nav className="topbar-nav">
-          <button
-            className={`nav-btn${view === 'tenant' ? ' active' : ''}`}
-            onClick={() => setView('tenant')}
-          >
-            <Home size={14} /> Tenant
-          </button>
-          <button
-            className={`nav-btn${view === 'agent' ? ' active' : ''}`}
-            onClick={() => setView('agent')}
-          >
+          <button className="nav-btn active">
             <LayoutDashboard size={14} /> Agent Dashboard
           </button>
-          {view === 'agent' && session && (
-            <button className="nav-btn" onClick={handleLogout}>
-              <LogOut size={14} /> Log out
-            </button>
-          )}
+          <button className="nav-btn" onClick={handleLogout}>
+            <LogOut size={14} /> Log out
+          </button>
         </nav>
       </div>
-
       <main className="main">
-        {view === 'tenant' && <TenantPortal />}
-        {view === 'agent' && session && <AgentDashboard />}
+        <AgentDashboard />
       </main>
     </div>
+  )
+}
+
+function TenantRoute() {
+  return (
+    <div className="app">
+      <div className="topbar">
+        <div className="topbar-logo">
+          <span className="logo-dot" />
+          Elevation Portal
+        </div>
+      </div>
+      <main className="main">
+        <TenantPortal />
+      </main>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/admin" element={<AdminRoute />} />
+        <Route path="/" element={<TenantRoute />} />
+        <Route path="*" element={<TenantRoute />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
