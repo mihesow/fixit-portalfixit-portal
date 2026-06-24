@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { CATS, URGENCY_OPTIONS } from '../lib/constants'
 import { createTicket, addHistory, getRecentTicketCountByHouse } from '../lib/supabase'
-// 1. Import Lucide icons
 import { AlertTriangle, Clock, Leaf, Camera, ArrowRight } from 'lucide-react'
 
 export default function RepairForm() {
+  const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [house, setHouse] = useState('')
   const [desc, setDesc] = useState('')
@@ -34,7 +34,7 @@ export default function RepairForm() {
   }
 
   async function handleSubmit() {
-    if (!phone || !house || !desc || !urgency || selectedCats.length === 0) {
+    if (!name || !phone || !house || !desc || !urgency || selectedCats.length === 0) {
       setAlert({ type: 'error', msg: 'Please fill in all fields, select urgency, and at least one category.' })
       return
     }
@@ -50,22 +50,22 @@ export default function RepairForm() {
     try {
       const recentTicketCount = await getRecentTicketCountByHouse(house.trim())
       if (recentTicketCount > 0) {
-        setAlert({ 
-          type: 'error', 
-          msg: `Submission blocked: Unit ${house.trim()} has already raised a ticket within the last 24 hours. Please wait before submitting another request.` 
+        setAlert({
+          type: 'error',
+          msg: `Submission blocked: Unit ${house.trim()} has already raised a ticket within the last 24 hours. Please wait before submitting another request.`
         })
         setLoading(false)
         return
       }
 
       const ticket = await createTicket({
-        id: genId(), phone, house_number: house.trim(), description: desc, urgency,
+        id: genId(), tenant_name: name.trim(), phone, house_number: house.trim(), description: desc, urgency,
         categories: selectedCats, photos, ticket_type: 'repair',
         status: 'pending', technician: 'Unassigned', subject: '', subtype: '',
       })
       await addHistory({ ticket_id: ticket.id, action: 'Repair request submitted by tenant' })
       setAlert({ type: 'success', msg: `Submitted! Ticket: ${ticket.id} — use phone number for tracking.` })
-      setPhone(''); setHouse(''); setDesc(''); setUrgency(''); setSelectedCats([]); setPhotos([])
+      setName(''); setPhone(''); setHouse(''); setDesc(''); setUrgency(''); setSelectedCats([]); setPhotos([])
     } catch (err) {
       setAlert({ type: 'error', msg: 'Something went wrong. Please try again.' })
     }
@@ -75,6 +75,12 @@ export default function RepairForm() {
   return (
     <div className="card">
       {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
+
+      <div>
+        <label>Full name</label>
+        <input type="text" placeholder="e.g. Jane Wanjiru" value={name} onChange={e => setName(e.target.value)} />
+      </div>
+
       <div className="grid2">
         <div>
           <label>Phone number</label>
@@ -85,15 +91,15 @@ export default function RepairForm() {
           <input type="text" placeholder="e.g. EL68" value={house} onChange={e => setHouse(e.target.value)} />
         </div>
       </div>
+
       <div>
         <label>Urgency level</label>
         <div className="urgency-row">
           {URGENCY_OPTIONS.map(u => (
             <button key={u.value} className={`sel-opt${urgency === u.value ? ' sel-' + u.value : ''}`} onClick={() => setUrgency(u.value)}>
-              {/* 2. Swapped Urgency Emojis for Lucide Icons */}
               <span className="icon">
-                {u.value === 'urgent' ? <AlertTriangle size={18} /> : 
-                 u.value === 'moderate' ? <Clock size={18} /> : 
+                {u.value === 'urgent' ? <AlertTriangle size={18} /> :
+                 u.value === 'moderate' ? <Clock size={18} /> :
                  <Leaf size={18} />}
               </span>
               <span style={{ fontWeight: 500 }}>{u.label}</span>
@@ -102,6 +108,7 @@ export default function RepairForm() {
           ))}
         </div>
       </div>
+
       <div>
         <label>Category <span style={{ color: '#e84560', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(select all that apply)</span></label>
         <div className="cats-grid">
@@ -112,14 +119,15 @@ export default function RepairForm() {
           ))}
         </div>
       </div>
+
       <div>
         <label>Description of issue</label>
         <textarea placeholder="Describe the problem in detail..." value={desc} onChange={e => setDesc(e.target.value)} />
       </div>
+
       <div>
         <label>Photos <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9aa0b8' }}>(optional)</span></label>
         <div className="photo-upload" onClick={() => document.getElementById('photo-input').click()}>
-          {/* 3. Swapped Camera Emoji for Lucide Icon */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Camera size={32} strokeWidth={1.5} />
           </div>
@@ -130,9 +138,9 @@ export default function RepairForm() {
           <div className="photo-preview">{photos.map((p, i) => <img key={i} className="photo-thumb" src={p} alt="" />)}</div>
         )}
       </div>
+
       <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
         <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {/* 4. Added a clean Lucide arrow to the submit button */}
           {loading ? 'Submitting...' : <><ArrowRight size={16} /> Submit request</>}
         </button>
       </div>

@@ -138,7 +138,7 @@ export default function AgentDashboard() {
                 <div className="ticket-id" onClick={() => setOpenTicket(t)} style={{ cursor: 'pointer' }}>{t.id}</div>
                 <div className="ticket-info" onClick={() => setOpenTicket(t)} style={{ cursor: 'pointer' }}>
                   <div className="ticket-title">
-                    Unit {t.house_number} — {t.subject || (t.categories || []).map(c => CATS.find(x => x.id === c)?.label || c).join(', ') || TYPE_LABELS[t.ticket_type]}
+                    {t.tenant_name ? `${t.tenant_name} · Unit ${t.house_number}` : `Unit ${t.house_number}`} — {t.subject || (t.categories || []).map(c => CATS.find(x => x.id === c)?.label || c).join(', ') || TYPE_LABELS[t.ticket_type]}
                   </div>
                   <div className="ticket-sub">
                     {(t.description || '').substring(0, 90)}{(t.description || '').length > 90 ? '...' : ''}

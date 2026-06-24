@@ -1,16 +1,16 @@
-import { Frown, ClipboardList, Lightbulb, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
+import { Frown, ClipboardList, Lightbulb } from 'lucide-react'
 import { REQUEST_SUBTYPES } from '../lib/constants'
 import { createTicket, addHistory } from '../lib/supabase'
 
-// 1. Updated the REQ_TYPES configuration array with Lucide components
 const REQ_TYPES = [
-  { value: 'complaint',  label: 'Complaint',   icon: <Frown size={18} />, sub: 'About apartment or management' },
-  { value: 'request',    label: 'Request',     icon: <ClipboardList size={18} />, sub: 'Keys, transfers, changes etc.' },
-  { value: 'suggestion', label: 'Suggestion',  icon: <Lightbulb size={18} />, sub: 'Ideas to improve the premises' },
+  { value: 'complaint',  label: 'Complaint',  icon: <Frown size={22} />,         sub: 'About apartment or management' },
+  { value: 'request',    label: 'Request',    icon: <ClipboardList size={22} />,  sub: 'Keys, transfers, changes etc.' },
+  { value: 'suggestion', label: 'Suggestion', icon: <Lightbulb size={22} />,      sub: 'Ideas to improve the premises' },
 ]
 
 export default function FeedbackForm() {
+  const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [house, setHouse] = useState('')
   const [reqType, setReqType] = useState('')
@@ -20,38 +20,40 @@ export default function FeedbackForm() {
   const [urgency, setUrgency] = useState('low')
   const [alert, setAlert] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [phoneError, setPhoneError] = useState('')
+
+  function validatePhone(val) {
+    const cleaned = val.replace(/\s+/g, '')
+    return /^(\+254|254|0)?(7|1)\d{8}$/.test(cleaned)
+  }
 
   function genId() {
     return 'TK-' + String(Math.floor(Math.random() * 90000) + 10000)
   }
 
   async function handleSubmit() {
-    if (!phone || !house || !subject || !desc || !reqType) {
+    setPhoneError('')
+    if (!name || !phone || !house || !subject || !desc || !reqType) {
       setAlert({ type: 'error', msg: 'Please fill in all fields and select a submission type.' })
+      return
+    }
+    if (!validatePhone(phone)) {
+      setPhoneError('Please enter a valid phone number (e.g. 0712345678).')
       return
     }
     setLoading(true)
     try {
       const ticket = await createTicket({
-        id: genId(),
-        phone,
-        house_number: house,
-        description: desc,
-        urgency,
-        categories: [],
-        photos: [],
-        ticket_type: reqType,
-        status: 'pending',
-        technician: 'Unassigned',
-        subject,
-        subtype: subtype || '',
+        id: genId(), tenant_name: name.trim(), phone, house_number: house, description: desc, urgency,
+        categories: [], photos: [], ticket_type: reqType,
+        status: 'pending', technician: 'Unassigned', subject, subtype: subtype || '',
       })
       await addHistory({
         ticket_id: ticket.id,
         action: `${reqType.charAt(0).toUpperCase() + reqType.slice(1)} submitted by tenant`,
       })
       setAlert({ type: 'success', msg: `Submitted! Your reference: ${ticket.id} — save this for tracking.` })
-      setPhone(''); setHouse(''); setReqType(''); setSubtype('')
+      setName(''); setPhone(''); setHouse(''); setReqType(''); setSubtype('')
       setSubject(''); setDesc(''); setUrgency('low')
     } catch (err) {
       setAlert({ type: 'error', msg: 'Something went wrong. Please try again.' })
@@ -61,18 +63,27 @@ export default function FeedbackForm() {
 
   return (
     <div className="card">
-      {alert && (
-        <div className={`alert alert-${alert.type}`}>{alert.msg}</div>
-      )}
+      {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
+
+      <div>
+        <label>Full name</label>
+        <input type="text" placeholder="e.g. Jane Wanjiru" value={name} onChange={e => setName(e.target.value)} />
+      </div>
 
       <div className="grid2">
         <div>
           <label>Phone number</label>
-          <input type="tel" placeholder="e.g. 0712 345 678" value={phone} onChange={e => setPhone(e.target.value)} />
+          <input
+            type="tel"
+            placeholder="e.g. 0712 345 678"
+            value={phone}
+            onChange={e => { setPhone(e.target.value); setPhoneError('') }}
+          />
+          {phoneError && <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 4 }}>{phoneError}</div>}
         </div>
         <div>
           <label>House / unit number</label>
-          <input type="text" placeholder="e.g. EL68" value={house} onChange={e => setHouse(e.target.value)} />
+          <input type="text" placeholder="e.g. EL03" value={house} onChange={e => setHouse(e.target.value)} />
         </div>
       </div>
 
@@ -85,7 +96,6 @@ export default function FeedbackForm() {
               className={`sel-opt${reqType === t.value ? ' sel-' + t.value : ''}`}
               onClick={() => { setReqType(t.value); setSubtype('') }}
             >
-              {/* 2. Rendered the icon component seamlessly */}
               <span className="icon">{t.icon}</span>
               <span style={{ fontWeight: 500 }}>{t.label}</span>
               <span className="sub">{t.sub}</span>
@@ -113,12 +123,7 @@ export default function FeedbackForm() {
 
       <div>
         <label>Details</label>
-        <textarea
-          placeholder="Provide full details here..."
-          style={{ minHeight: 110 }}
-          value={desc}
-          onChange={e => setDesc(e.target.value)}
-        />
+        <textarea placeholder="Provide full details here..." style={{ minHeight: 110 }} value={desc} onChange={e => setDesc(e.target.value)} />
       </div>
 
       <div>
@@ -130,15 +135,9 @@ export default function FeedbackForm() {
         </select>
       </div>
 
-      {/* 3. Updated button to use flex alignment and the ArrowRight icon */}
       <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-        <button 
-          className="btn btn-primary" 
-          onClick={handleSubmit} 
-          disabled={loading}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          {loading ? 'Submitting...' : <><ArrowRight size={16} /> Submit request</>}
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Submitting...' : '→ Submit'}
         </button>
       </div>
     </div>

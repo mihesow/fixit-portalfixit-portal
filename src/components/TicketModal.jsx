@@ -90,8 +90,8 @@ export default function TicketModal({ ticket, onClose, onSaved, onDeleteRequest 
         <div className="grid2" style={{ marginBottom: '1rem' }}>
           <div>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tenant</div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 3 }}>Unit {ticket.house_number}</div>
-            <div style={{ fontSize: 13, color: 'var(--text2)' }}>{ticket.phone}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 3 }}>{ticket.tenant_name || 'Unit ' + ticket.house_number}</div>
+            <div style={{ fontSize: 13, color: 'var(--text2)' }}>Unit {ticket.house_number} &middot; {ticket.phone}</div>
           </div>
           <div>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Submitted</div>
