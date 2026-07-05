@@ -5,10 +5,17 @@ const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
-export async function getTickets() {
-  const { data, error } = await supabase.from('tickets').select('*').order('created_at', { ascending: false })
+// Fetch tickets with pagination — 50 per page
+export async function getTickets({ page = 0, pageSize = 50 } = {}) {
+  const from = page * pageSize
+  const to = from + pageSize - 1
+  const { data, error, count } = await supabase
+    .from('tickets')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to)
   if (error) throw error
-  return data
+  return { data: data || [], count }
 }
 
 export async function createTicket(ticket) {
@@ -28,8 +35,6 @@ export async function deleteTicket(id) {
   if (error) throw error
 }
 
-// Returns how many repair tickets a given house number has submitted
-// in the last 24 hours — used to block duplicate submissions.
 export async function getRecentTicketCountByHouse(houseNumber) {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
   const { data, error, count } = await supabase
@@ -69,4 +74,22 @@ export async function addHistory(entry) {
   const { data, error } = await supabase.from('history').insert([entry]).select().single()
   if (error) throw error
   return data
+}
+
+// Batch insert multiple history entries in one request
+export async function addHistoryBatch(entries) {
+  if (!entries.length) return
+  const { error } = await supabase.from('history').insert(entries)
+  if (error) throw error
+}
+
+// Fetch costs and history simultaneously instead of sequentially
+export async function getTicketDetails(ticketId) {
+  const [costsResult, historyResult] = await Promise.all([
+    supabase.from('costs').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true }),
+    supabase.from('history').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: false }),
+  ])
+  if (costsResult.error) throw costsResult.error
+  if (historyResult.error) throw historyResult.error
+  return { costs: costsResult.data || [], history: historyResult.data || [] }
 }
