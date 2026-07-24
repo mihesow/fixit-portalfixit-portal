@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ClipboardList, FileText, Inbox, ChevronRight, Trash2 } from 'lucide-react'
-import { getTickets, deleteTicket } from '../lib/supabase'
+import { getTickets, getTicketCount, deleteTicket } from '../lib/supabase'
 import { CATS, TECHNICIANS, STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
 import TicketModal from '../components/TicketModal'
 import ReportModal from '../components/ReportModal'
@@ -44,14 +44,18 @@ export default function AgentDashboard() {
     }
     try {
       const currentPage = resetPage ? 0 : page + 1
-      const { data, count } = await getTickets({ page: currentPage, pageSize: PAGE_SIZE })
       if (resetPage) {
+        const [{ data }, count] = await Promise.all([
+          getTickets({ page: currentPage, pageSize: PAGE_SIZE }),
+          getTicketCount(),
+        ])
         setTickets(data)
+        setTotalCount(count)
       } else {
+        const { data } = await getTickets({ page: currentPage, pageSize: PAGE_SIZE })
         setTickets(prev => [...prev, ...data])
         setPage(currentPage)
       }
-      setTotalCount(count || 0)
     } catch (err) {
       console.error('Failed to load tickets:', err)
     }

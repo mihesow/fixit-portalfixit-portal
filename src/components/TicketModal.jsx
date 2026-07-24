@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Trash2, Check, X, ZoomIn } from 'lucide-react'
 import { CATS, TECHNICIANS, STATUS_LABELS, TYPE_LABELS, URGENCY_LABELS } from '../lib/constants'
-import { updateTicket, addCost, deleteCost, addHistoryBatch, addHistory, getTicketDetails } from '../lib/supabase'
+import { updateTicket, addCost, deleteCost, addHistoryBatch, addHistory, getTicketDetails, getTicketPhotos } from '../lib/supabase'
 
 function statusBadge(s) {
   return { pending: 'b-pending', 'in-progress': 'b-progress', resolved: 'b-resolved' }[s] || 'b-pending'
@@ -94,6 +94,8 @@ export default function TicketModal({ ticket, onClose, onSaved, onDeleteRequest 
   const [saving, setSaving] = useState(false)
   const [detailsLoading, setDetailsLoading] = useState(true)
   const [lightboxIndex, setLightboxIndex] = useState(null)
+  const [photos, setPhotos] = useState(ticket.photos || [])
+  const [photosLoading, setPhotosLoading] = useState(!ticket.photos)
 
   // Load costs + history in parallel
   useEffect(() => {
@@ -104,6 +106,17 @@ export default function TicketModal({ ticket, onClose, onSaved, onDeleteRequest 
       setDetailsLoading(false)
     })
   }, [ticket.id])
+
+  // Photos aren't included in the dashboard list query (they can be large base64
+  // blobs on older tickets), so fetch them separately when the modal opens.
+  useEffect(() => {
+    if (ticket.photos) return // already have them (e.g. passed in directly)
+    setPhotosLoading(true)
+    getTicketPhotos(ticket.id).then(p => {
+      setPhotos(p)
+      setPhotosLoading(false)
+    })
+  }, [ticket.id]) // eslint-disable-line
 
   const totalCost = costs.reduce((s, c) => s + Number(c.amount), 0)
   const isRepair = ticket.ticket_type === 'repair'
@@ -163,7 +176,7 @@ export default function TicketModal({ ticket, onClose, onSaved, onDeleteRequest 
     <>
       {lightboxIndex !== null && (
         <Lightbox
-          photos={ticket.photos}
+          photos={photos}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
         />
@@ -232,13 +245,15 @@ export default function TicketModal({ ticket, onClose, onSaved, onDeleteRequest 
           </div>
 
           {/* Photos with lightbox */}
-          {ticket.photos?.length > 0 && (
+          {photosLoading ? (
+            <div style={{ marginBottom: '1rem', fontSize: 13, color: 'var(--text2)' }}>Loading photos...</div>
+          ) : photos.length > 0 && (
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 6 }}>
-                Photos ({ticket.photos.length})
+                Photos ({photos.length})
               </div>
               <div className="photo-preview">
-                {ticket.photos.map((p, i) => (
+                {photos.map((p, i) => (
                   <div
                     key={i}
                     style={{ position: 'relative', cursor: 'pointer', display: 'inline-block' }}

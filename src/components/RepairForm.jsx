@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CATS, URGENCY_OPTIONS } from '../lib/constants'
-import { createTicket, addHistory, getRecentTicketCountByHouse } from '../lib/supabase'
+import { createTicket, addHistory, getRecentTicketCountByHouse, uploadTicketPhoto } from '../lib/supabase'
 import { AlertTriangle, Clock, Leaf, Camera, ArrowRight } from 'lucide-react'
 
 export default function RepairForm() {
@@ -19,11 +19,11 @@ export default function RepairForm() {
   }
 
   function handlePhotos(e) {
-    Array.from(e.target.files).forEach(f => {
-      const reader = new FileReader()
-      reader.onload = ev => setPhotos(prev => [...prev, ev.target.result])
-      reader.readAsDataURL(f)
-    })
+    const newFiles = Array.from(e.target.files).map(file => ({
+      file,
+      previewUrl: URL.createObjectURL(file), // cheap local preview, not stored anywhere
+    }))
+    setPhotos(prev => [...prev, ...newFiles])
   }
 
   function genId() { return 'TK-' + String(Math.floor(Math.random() * 90000) + 10000) }
@@ -58,9 +58,16 @@ export default function RepairForm() {
         return
       }
 
+      const ticketId = genId()
+
+      let photoUrls = []
+      if (photos.length > 0) {
+        photoUrls = await Promise.all(photos.map(p => uploadTicketPhoto(p.file, ticketId)))
+      }
+
       const ticket = await createTicket({
-        id: genId(), tenant_name: name.trim(), phone, house_number: house.trim(), description: desc, urgency,
-        categories: selectedCats, photos, ticket_type: 'repair',
+        id: ticketId, tenant_name: name.trim(), phone, house_number: house.trim(), description: desc, urgency,
+        categories: selectedCats, photos: photoUrls, ticket_type: 'repair',
         status: 'pending', technician: 'Unassigned', subject: '', subtype: '',
       })
       await addHistory({ ticket_id: ticket.id, action: 'Repair request submitted by tenant' })
@@ -135,7 +142,7 @@ export default function RepairForm() {
         </div>
         <input id="photo-input" type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotos} />
         {photos.length > 0 && (
-          <div className="photo-preview">{photos.map((p, i) => <img key={i} className="photo-thumb" src={p} alt="" />)}</div>
+          <div className="photo-preview">{photos.map((p, i) => <img key={i} className="photo-thumb" src={p.previewUrl} alt="" />)}</div>
         )}
       </div>
 
