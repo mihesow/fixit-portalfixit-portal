@@ -74,6 +74,7 @@ export default function RepairForm() {
       setAlert({ type: 'success', msg: `Submitted! Ticket: ${ticket.id} — use phone number for tracking.` })
       setName(''); setPhone(''); setHouse(''); setDesc(''); setUrgency(''); setSelectedCats([]); setPhotos([])
     } catch (err) {
+      console.error('Ticket submission failed:', err)
       setAlert({ type: 'error', msg: 'Something went wrong. Please try again.' })
     }
     setLoading(false)
