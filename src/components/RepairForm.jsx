@@ -71,7 +71,7 @@ export default function RepairForm() {
         status: 'pending', technician: 'Unassigned', subject: '', subtype: '',
       })
       await addHistory({ ticket_id: ticket.id, action: 'Repair request submitted by tenant' })
-      setAlert({ type: 'success', msg: `Submitted! Ticket: ${ticket.id} — use phone number for tracking.` })
+      setAlert({ type: 'success', msg: `Submitted! Use your phone number to track this request.` })
       setName(''); setPhone(''); setHouse(''); setDesc(''); setUrgency(''); setSelectedCats([]); setPhotos([])
     } catch (err) {
       console.error('Ticket submission failed:', err)
